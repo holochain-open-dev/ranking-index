@@ -17,5 +17,6 @@ holo_hash = {version = "0.0.15", features = ["encoding"]}
 
 [dev-dependencies]
 futures = {version = "0.3.1", default-features = false}
-holochain = {version = "0.0.109", default-features = false, features = ["test_utils"]}
+hdk = "0.0.118"
+holochain = {version = "0.0.122", default-features = false, features = ["test_utils"]}
 tokio = {version = "1.3", features = ["full"]}

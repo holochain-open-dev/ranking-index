@@ -4,5 +4,5 @@ name: example-ranking-index
 uuid: 00000000-0000-0000-0000-000000000000
 properties: ~
 zomes: 
-  - name: example-ranking-index
+  - name: example_ranking_index
     bundled: ../../target/wasm32-unknown-unknown/release/example_ranking_index.wasm
