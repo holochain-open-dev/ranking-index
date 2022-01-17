@@ -3,35 +3,46 @@ use hdk::prelude::*;
 
 const MY_INDEX: RankingIndex = RankingIndex {
     name: "my_thing",
-    mod_interval: 3,
+    index_interval: 3,
 };
 
 #[hdk_entry(id = "demo")]
 pub struct DemoEntry(String);
 
-entry_defs![DemoEntry::entry_def(), Path::entry_def()];
+entry_defs![DemoEntry::entry_def(), PathEntry::entry_def()];
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RankEntryInput {
+pub struct CreateEntryRankingInput {
     pub ranking: i64,
     pub entry_hash: EntryHash,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct GetRankingInput {
-    pub direction: GetRankingDirection,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GetRankingsInput {
+    pub direction: GetRankingsDirection,
     pub entry_count: usize,
-    pub cursor: Option<GetRankingCursor>,
+    pub cursor: Option<GetRankingsCursor>,
 }
 
 #[hdk_extern]
-pub fn rank_entry(input: RankEntryInput) -> ExternResult<()> {
-    MY_INDEX.rank_entry(input.entry_hash, input.ranking)
+pub fn create_entry_ranking(input: CreateEntryRankingInput) -> ExternResult<()> {
+    MY_INDEX.create_entry_ranking(input.entry_hash, input.ranking)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DeleteEntryRankingInput {
+    pub current_ranking: i64,
+    pub entry_hash: EntryHash,
 }
 
 #[hdk_extern]
-pub fn get_entry_ranking(input: GetRankingInput) -> ExternResult<EntryRanking> {
-    MY_INDEX.get_entry_ranking(input.direction, input.entry_count, input.cursor)
+pub fn delete_entry_ranking(input: DeleteEntryRankingInput) -> ExternResult<()> {
+    MY_INDEX.delete_entry_ranking(input.entry_hash, input.current_ranking)
+}
+
+#[hdk_extern]
+pub fn get_entry_rankings(input: GetRankingsInput) -> ExternResult<EntryRanking> {
+    MY_INDEX.get_entry_rankings(input.direction, input.entry_count, input.cursor)
 }
 
 #[hdk_extern]
