@@ -1,5 +1,5 @@
 use example_ranking_index::{CreateEntryRankingInput, DeleteEntryRankingInput, GetRankingsInput};
-use hc_lib_ranking_index::{EntryRanking, GetRankingsCursor, GetRankingsDirection};
+use hc_lib_ranking_index::{EntryRankings, GetRankingsCursor, GetRankingsDirection};
 use hdk::prelude::EntryHash;
 use holochain::test_utils::consistency_10s;
 use holochain::{conductor::config::ConductorConfig, sweettest::*};
@@ -55,7 +55,7 @@ async fn basic_rank() {
         entry_count: 2,
         cursor: None,
     };
-    let ranking_output: EntryRanking = conductors[0]
+    let ranking_output: EntryRankings = conductors[0]
         .call(&alice_zome, "get_entry_rankings", get_entry_ranking_input)
         .await;
 
@@ -74,7 +74,7 @@ async fn basic_rank() {
         entry_count: 12,
         cursor: Some(GetRankingsCursor { from_ranking: 2 }),
     };
-    let ranking_output: EntryRanking = conductors[1]
+    let ranking_output: EntryRankings = conductors[1]
         .call(&bob_zome, "get_entry_rankings", get_entry_ranking_input)
         .await;
 
@@ -93,7 +93,7 @@ async fn basic_rank() {
         entry_count: 2,
         cursor: None,
     };
-    let ranking_output: EntryRanking = conductors[0]
+    let ranking_output: EntryRankings = conductors[0]
         .call(
             &alice_zome,
             "get_entry_rankings",
@@ -124,7 +124,7 @@ async fn basic_rank() {
 
     consistency_10s(&[&alice, &bobbo]).await;
 
-    let ranking_output: EntryRanking = conductors[0]
+    let ranking_output: EntryRankings = conductors[0]
         .call(&alice_zome, "get_entry_rankings", get_entry_ranking_input)
         .await;
 

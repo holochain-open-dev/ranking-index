@@ -41,7 +41,7 @@ pub fn delete_entry_ranking(input: DeleteEntryRankingInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_entry_rankings(input: GetRankingsInput) -> ExternResult<EntryRanking> {
+pub fn get_entry_rankings(input: GetRankingsInput) -> ExternResult<EntryRankings> {
     MY_INDEX.get_entry_rankings(input.direction, input.entry_count, input.cursor)
 }
 

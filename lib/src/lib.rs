@@ -59,10 +59,10 @@ impl RankingIndex {
         direction: GetRankingsDirection,
         entry_count: usize,
         cursor: Option<GetRankingsCursor>,
-    ) -> ExternResult<EntryRanking> {
+    ) -> ExternResult<EntryRankings> {
         let intervals: BTreeMap<i64, Path> = self.get_interval_paths()?;
 
-        let mut entry_ranking: EntryRanking = BTreeMap::new();
+        let mut entry_ranking: EntryRankings = BTreeMap::new();
         let mut interval_index =
             initial_interval_index(&intervals, direction.clone(), cursor.clone()) as isize;
 
@@ -117,7 +117,7 @@ impl RankingIndex {
         Ok(interval_paths)
     }
 
-    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRanking> {
+    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRankings> {
         let links = get_links(interval_path.path_entry_hash()?, None)?;
 
         let entry_ranking = links
@@ -128,7 +128,7 @@ impl RankingIndex {
             })
             .collect::<ExternResult<Vec<(i64, EntryHash)>>>()?;
 
-        let mut ranking_map: EntryRanking = BTreeMap::new();
+        let mut ranking_map: EntryRankings = BTreeMap::new();
 
         for (ranking, entry_hash) in entry_ranking {
             ranking_map
@@ -140,7 +140,7 @@ impl RankingIndex {
         Ok(ranking_map)
     }
 
-    fn ranking_mod(&self, ranking: i64) -> i64 {
+    fn ranking_interval(&self, ranking: i64) -> i64 {
         ranking / (self.index_interval as i64)
     }
 
@@ -148,7 +148,7 @@ impl RankingIndex {
         Path::from(format!(
             "{}.{}",
             self.root_path_str(),
-            self.ranking_mod(ranking)
+            self.ranking_interval(ranking)
         ))
     }
 
@@ -189,7 +189,7 @@ fn component_to_ranking(c: &Component) -> ExternResult<i64> {
     Ok(ranking)
 }
 
-fn ranking_len(entry_ranking: &EntryRanking) -> usize {
+fn ranking_len(entry_ranking: &EntryRankings) -> usize {
     entry_ranking.values().fold(0, |acc, next| acc + next.len())
 }
 

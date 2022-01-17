@@ -7,7 +7,7 @@ pub enum GetRankingsDirection {
     Descendent,
 }
 
-pub type EntryRanking = BTreeMap<i64, Vec<EntryHash>>;
+pub type EntryRankings = BTreeMap<i64, Vec<EntryHash>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRankingsCursor {
