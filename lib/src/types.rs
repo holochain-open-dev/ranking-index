@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum GetRankingsDirection {
+pub enum GetRankingDirection {
     Ascendent,
     Descendent,
 }
 
-pub type EntryRankings = BTreeMap<i64, Vec<EntryHash>>;
+pub type EntryRanking = BTreeMap<i64, Vec<EntryHash>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GetRankingsCursor {
+pub struct GetRankingCursor {
     pub from_ranking: i64,
 }

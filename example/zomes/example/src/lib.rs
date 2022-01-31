@@ -19,9 +19,9 @@ pub struct CreateEntryRankingInput {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRankingsInput {
-    pub direction: GetRankingsDirection,
+    pub direction: GetRankingDirection,
     pub entry_count: usize,
-    pub cursor: Option<GetRankingsCursor>,
+    pub cursor: Option<GetRankingCursor>,
 }
 
 #[hdk_extern]
@@ -41,7 +41,7 @@ pub fn delete_entry_ranking(input: DeleteEntryRankingInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_entry_ranking(input: GetRankingsInput) -> ExternResult<EntryRankings> {
+pub fn get_entry_ranking(input: GetRankingsInput) -> ExternResult<EntryRanking> {
     MY_INDEX.get_entry_ranking(input.direction, input.entry_count, input.cursor)
 }
 

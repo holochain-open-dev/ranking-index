@@ -1,5 +1,5 @@
 use example_ranking_index::{CreateEntryRankingInput, DeleteEntryRankingInput, GetRankingsInput};
-use hc_lib_ranking_index::{EntryRankings, GetRankingsCursor, GetRankingsDirection};
+use hc_lib_ranking_index::{EntryRanking, GetRankingCursor, GetRankingDirection};
 use hdk::prelude::EntryHash;
 use holochain::test_utils::consistency_10s;
 use holochain::{conductor::config::ConductorConfig, sweettest::*};
@@ -51,11 +51,11 @@ async fn basic_rank() {
     consistency_10s(&[&alice, &bobbo]).await;
 
     let get_entry_ranking_input = GetRankingsInput {
-        direction: GetRankingsDirection::Ascendent,
+        direction: GetRankingDirection::Ascendent,
         entry_count: 2,
         cursor: None,
     };
-    let ranking_output: EntryRankings = conductors[0]
+    let ranking_output: EntryRanking = conductors[0]
         .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 
@@ -70,11 +70,11 @@ async fn basic_rank() {
     assert!(ranking_output.len() >= 2);
 
     let get_entry_ranking_input = GetRankingsInput {
-        direction: GetRankingsDirection::Ascendent,
+        direction: GetRankingDirection::Ascendent,
         entry_count: 12,
-        cursor: Some(GetRankingsCursor { from_ranking: 2 }),
+        cursor: Some(GetRankingCursor { from_ranking: 2 }),
     };
-    let ranking_output: EntryRankings = conductors[1]
+    let ranking_output: EntryRanking = conductors[1]
         .call(&bob_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 
@@ -89,11 +89,11 @@ async fn basic_rank() {
     assert_eq!(ranking_output.len(), 6);
 
     let get_entry_ranking_input = GetRankingsInput {
-        direction: GetRankingsDirection::Descendent,
+        direction: GetRankingDirection::Descendent,
         entry_count: 2,
         cursor: None,
     };
-    let ranking_output: EntryRankings = conductors[0]
+    let ranking_output: EntryRanking = conductors[0]
         .call(
             &alice_zome,
             "get_entry_ranking",
@@ -124,7 +124,7 @@ async fn basic_rank() {
 
     consistency_10s(&[&alice, &bobbo]).await;
 
-    let ranking_output: EntryRankings = conductors[0]
+    let ranking_output: EntryRanking = conductors[0]
         .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 

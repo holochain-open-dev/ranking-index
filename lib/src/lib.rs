@@ -56,13 +56,13 @@ impl RankingIndex {
 
     pub fn get_entry_ranking(
         &self,
-        direction: GetRankingsDirection,
+        direction: GetRankingDirection,
         entry_count: usize,
-        cursor: Option<GetRankingsCursor>,
-    ) -> ExternResult<EntryRankings> {
+        cursor: Option<GetRankingCursor>,
+    ) -> ExternResult<EntryRanking> {
         let intervals: BTreeMap<i64, Path> = self.get_interval_paths()?;
 
-        let mut entry_ranking: EntryRankings = BTreeMap::new();
+        let mut entry_ranking: EntryRanking = BTreeMap::new();
         let mut interval_index =
             initial_interval_index(&intervals, direction.clone(), cursor.clone()) as isize;
 
@@ -87,10 +87,10 @@ impl RankingIndex {
             }
 
             match direction {
-                GetRankingsDirection::Ascendent => {
+                GetRankingDirection::Ascendent => {
                     interval_index += 1;
                 }
-                GetRankingsDirection::Descendent => {
+                GetRankingDirection::Descendent => {
                     interval_index -= 1;
                 }
             }
@@ -117,7 +117,7 @@ impl RankingIndex {
         Ok(interval_paths)
     }
 
-    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRankings> {
+    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRanking> {
         let links = get_links(interval_path.path_entry_hash()?, None)?;
 
         let entry_ranking = links
@@ -128,7 +128,7 @@ impl RankingIndex {
             })
             .collect::<ExternResult<Vec<(i64, EntryHash)>>>()?;
 
-        let mut ranking_map: EntryRankings = BTreeMap::new();
+        let mut ranking_map: EntryRanking = BTreeMap::new();
 
         for (ranking, entry_hash) in entry_ranking {
             ranking_map
@@ -189,19 +189,19 @@ fn component_to_ranking(c: &Component) -> ExternResult<i64> {
     Ok(ranking)
 }
 
-fn ranking_len(entry_ranking: &EntryRankings) -> usize {
+fn ranking_len(entry_ranking: &EntryRanking) -> usize {
     entry_ranking.values().fold(0, |acc, next| acc + next.len())
 }
 
 fn initial_interval_index(
     interval_paths: &BTreeMap<i64, Path>,
-    direction: GetRankingsDirection,
-    maybe_cursor: Option<GetRankingsCursor>,
+    direction: GetRankingDirection,
+    maybe_cursor: Option<GetRankingCursor>,
 ) -> usize {
     match maybe_cursor {
         None => match direction {
-            GetRankingsDirection::Ascendent => 0,
-            GetRankingsDirection::Descendent => interval_paths.len() - 1,
+            GetRankingDirection::Ascendent => 0,
+            GetRankingDirection::Descendent => interval_paths.len() - 1,
         },
         Some(cursor) => {
             let ordered_keys: Vec<i64> = interval_paths.keys().into_iter().cloned().collect();
@@ -219,16 +219,16 @@ fn initial_interval_index(
 
 fn is_inside_query_range(
     ranking: i64,
-    direction: GetRankingsDirection,
-    maybe_cursor: Option<GetRankingsCursor>,
+    direction: GetRankingDirection,
+    maybe_cursor: Option<GetRankingCursor>,
 ) -> bool {
     match maybe_cursor {
         None => true,
         Some(cursor) => {
             let from_ranking = cursor.from_ranking;
             match direction {
-                GetRankingsDirection::Ascendent => ranking >= from_ranking,
-                GetRankingsDirection::Descendent => ranking <= from_ranking,
+                GetRankingDirection::Ascendent => ranking >= from_ranking,
+                GetRankingDirection::Descendent => ranking <= from_ranking,
             }
         }
     }
