@@ -16,7 +16,7 @@ hc_lib_ranking_index = {git = "https://github.com/holochain-open-dev/ranking-ind
 ```rust
 const MY_RANKING_INDEX: RankingIndex = RankingIndex {
     name: "my_thing",
-    mod_interval: 3,
+    index_interval: 3,
 };
 ```
 

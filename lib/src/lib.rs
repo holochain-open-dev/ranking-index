@@ -54,7 +54,7 @@ impl RankingIndex {
         Ok(())
     }
 
-    pub fn get_entry_rankings(
+    pub fn get_entry_ranking(
         &self,
         direction: GetRankingsDirection,
         entry_count: usize,

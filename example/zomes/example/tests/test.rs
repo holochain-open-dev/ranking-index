@@ -56,7 +56,7 @@ async fn basic_rank() {
         cursor: None,
     };
     let ranking_output: EntryRankings = conductors[0]
-        .call(&alice_zome, "get_entry_rankings", get_entry_ranking_input)
+        .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 
     assert_eq!(
@@ -75,7 +75,7 @@ async fn basic_rank() {
         cursor: Some(GetRankingsCursor { from_ranking: 2 }),
     };
     let ranking_output: EntryRankings = conductors[1]
-        .call(&bob_zome, "get_entry_rankings", get_entry_ranking_input)
+        .call(&bob_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 
     assert_eq!(
@@ -96,7 +96,7 @@ async fn basic_rank() {
     let ranking_output: EntryRankings = conductors[0]
         .call(
             &alice_zome,
-            "get_entry_rankings",
+            "get_entry_ranking",
             get_entry_ranking_input.clone(),
         )
         .await;
@@ -125,7 +125,7 @@ async fn basic_rank() {
     consistency_10s(&[&alice, &bobbo]).await;
 
     let ranking_output: EntryRankings = conductors[0]
-        .call(&alice_zome, "get_entry_rankings", get_entry_ranking_input)
+        .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
         .await;
 
     println!("{:?}", ranking_output);
