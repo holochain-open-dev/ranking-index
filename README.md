@@ -6,7 +6,7 @@ Add this in the `Cargo.toml` of your zome:
 
 ```toml
 [dependencies]
-hc_lib_ranking_index = {git = "https://github.com/holochain-open-dev/ranking-index", branch = "main" package = "hc_lib_ranking_index"}
+hc_lib_ranking_index = {git = "https://github.com/holochain-open-dev/ranking-index", branch = "main", package = "hc_lib_ranking_index"}
 ```
 
 ## Usage
