@@ -20,7 +20,7 @@ const MY_RANKING_INDEX: RankingIndex = RankingIndex {
 };
 ```
 
-Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking`.
+Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
 
 2. Add `Path` to the `entry_defs` of the zome if they are not already there:
 
@@ -43,7 +43,7 @@ pub fn rank_entry(input: RankEntryInput) -> ExternResult<()> {
 }
 ```
 
-4. Get the ranking of entries with `get_entry_ranking`:
+4. Get the ranking of entries with `get_entry_ranking_chunk`:
 
 ```rust
 #[derive(Serialize, Deserialize, Debug)]
@@ -55,8 +55,8 @@ pub struct GetRankingInput {
 
 
 #[hdk_extern]
-pub fn get_entry_ranking(input: GetRankingInput) -> ExternResult<EntryRanking> {
-    MY_RANKING_INDEX.get_entry_ranking(input.direction, input.entry_count, input.cursor)
+pub fn get_entry_ranking_chunk(input: GetRankingInput) -> ExternResult<EntryRanking> {
+    MY_RANKING_INDEX.get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor)
 }
 ```
 

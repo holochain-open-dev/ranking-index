@@ -50,13 +50,13 @@ async fn basic_rank() {
 
     consistency_10s(&[&alice, &bobbo]).await;
 
-    let get_entry_ranking_input = GetRankingsInput {
+    let get_entry_ranking_chunk_input = GetRankingsInput {
         direction: GetRankingDirection::Ascendent,
         entry_count: 2,
         cursor: None,
     };
     let ranking_output: EntryRanking = conductors[0]
-        .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
+        .call(&alice_zome, "get_entry_ranking_chunk", get_entry_ranking_chunk_input)
         .await;
 
     assert_eq!(
@@ -69,13 +69,13 @@ async fn basic_rank() {
     );
     assert!(ranking_output.len() >= 2);
 
-    let get_entry_ranking_input = GetRankingsInput {
+    let get_entry_ranking_chunk_input = GetRankingsInput {
         direction: GetRankingDirection::Ascendent,
         entry_count: 12,
         cursor: Some(GetRankingCursor { from_ranking: 2 }),
     };
     let ranking_output: EntryRanking = conductors[1]
-        .call(&bob_zome, "get_entry_ranking", get_entry_ranking_input)
+        .call(&bob_zome, "get_entry_ranking_chunk", get_entry_ranking_chunk_input)
         .await;
 
     assert_eq!(
@@ -88,7 +88,7 @@ async fn basic_rank() {
     );
     assert_eq!(ranking_output.len(), 6);
 
-    let get_entry_ranking_input = GetRankingsInput {
+    let get_entry_ranking_chunk_input = GetRankingsInput {
         direction: GetRankingDirection::Descendent,
         entry_count: 2,
         cursor: None,
@@ -96,8 +96,8 @@ async fn basic_rank() {
     let ranking_output: EntryRanking = conductors[0]
         .call(
             &alice_zome,
-            "get_entry_ranking",
-            get_entry_ranking_input.clone(),
+            "get_entry_ranking_chunk",
+            get_entry_ranking_chunk_input.clone(),
         )
         .await;
 
@@ -125,7 +125,7 @@ async fn basic_rank() {
     consistency_10s(&[&alice, &bobbo]).await;
 
     let ranking_output: EntryRanking = conductors[0]
-        .call(&alice_zome, "get_entry_ranking", get_entry_ranking_input)
+        .call(&alice_zome, "get_entry_ranking_chunk", get_entry_ranking_chunk_input)
         .await;
 
     println!("{:?}", ranking_output);
