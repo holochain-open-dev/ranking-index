@@ -17,7 +17,12 @@ impl RankingIndex {
         }
     }
 
-    pub fn create_entry_ranking(&self, entry_hash: EntryHash, ranking: i64) -> ExternResult<()> {
+    pub fn create_entry_ranking(
+        &self,
+        entry_hash: EntryHash,
+        ranking: i64,
+        tag: Option<SerializedBytes>,
+    ) -> ExternResult<()> {
         let path = self.get_ranking_path(ranking);
 
         path.ensure()?;
@@ -25,7 +30,7 @@ impl RankingIndex {
         create_link(
             path.path_entry_hash()?,
             entry_hash,
-            ranking_to_tag(ranking)?,
+            ranking_to_tag(ranking, tag)?,
         )?;
 
         Ok(())
@@ -40,7 +45,8 @@ impl RankingIndex {
         let ranking_path = self.get_ranking_path(entry_ranking);
         let links = get_links(ranking_path.path_entry_hash()?, None)?;
 
-        let links_to_delete: Vec<HeaderHash> = links.clone()
+        let links_to_delete: Vec<HeaderHash> = links
+            .clone()
             .into_iter()
             .filter(|link| link.target.eq(&entry_hash))
             .map(|link| link.create_link_hash)
@@ -124,17 +130,20 @@ impl RankingIndex {
             .into_iter()
             .map(|link| {
                 let ranking = tag_to_ranking(link.tag)?;
-                Ok((ranking, link.target))
+                Ok((ranking.0, link.target, ranking.1))
             })
-            .collect::<ExternResult<Vec<(i64, EntryHash)>>>()?;
+            .collect::<ExternResult<Vec<(i64, EntryHash, Option<SerializedBytes>)>>>()?;
 
         let mut ranking_map: EntryRanking = BTreeMap::new();
 
-        for (ranking, entry_hash) in entry_ranking {
+        for (ranking, entry_hash, custom_tag) in entry_ranking {
             ranking_map
                 .entry(ranking)
                 .or_insert_with(Vec::new)
-                .push(entry_hash);
+                .push(EntryHashWithTag {
+                    entry_hash,
+                    tag: custom_tag,
+                });
         }
 
         Ok(ranking_map)
@@ -164,20 +173,24 @@ impl RankingIndex {
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 struct RankingTag {
     ranking: i64,
+    custom_tag: Option<SerializedBytes>,
 }
 
-fn ranking_to_tag(ranking: i64) -> ExternResult<LinkTag> {
-    let bytes = SerializedBytes::try_from(RankingTag { ranking })?;
+fn ranking_to_tag(ranking: i64, custom_tag: Option<SerializedBytes>) -> ExternResult<LinkTag> {
+    let bytes = SerializedBytes::try_from(RankingTag {
+        ranking,
+        custom_tag,
+    })?;
 
     Ok(LinkTag(bytes.bytes().clone()))
 }
 
-fn tag_to_ranking(tag: LinkTag) -> ExternResult<i64> {
+fn tag_to_ranking(tag: LinkTag) -> ExternResult<(i64, Option<SerializedBytes>)> {
     let bytes = tag.into_inner();
     let sb = SerializedBytes::from(UnsafeBytes::from(bytes));
 
     let ranking: RankingTag = sb.try_into()?;
-    Ok(ranking.ranking)
+    Ok((ranking.ranking, ranking.custom_tag))
 }
 
 fn component_to_ranking(c: &Component) -> ExternResult<i64> {

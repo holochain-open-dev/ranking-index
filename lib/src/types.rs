@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use hdk::prelude::*;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum GetRankingDirection {
@@ -7,7 +7,13 @@ pub enum GetRankingDirection {
     Descendent,
 }
 
-pub type EntryRanking = BTreeMap<i64, Vec<EntryHash>>;
+pub type EntryRanking = BTreeMap<i64, Vec<EntryHashWithTag>>;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EntryHashWithTag {
+    pub entry_hash: EntryHash,
+    pub tag: Option<SerializedBytes>,
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRankingCursor {

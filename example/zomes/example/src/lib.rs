@@ -26,7 +26,9 @@ pub struct GetRankingsInput {
 
 #[hdk_extern]
 pub fn create_entry_ranking(input: CreateEntryRankingInput) -> ExternResult<()> {
-    MY_INDEX.create_entry_ranking(input.entry_hash, input.ranking)
+    let custom_tag = SerializedBytes::try_from(input.entry_hash.clone())?;
+
+    MY_INDEX.create_entry_ranking(input.entry_hash, input.ranking, Some(custom_tag))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
