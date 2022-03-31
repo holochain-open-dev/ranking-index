@@ -17,6 +17,14 @@ impl RankingIndex {
         }
     }
 
+    /// Creates a new link between a path of the format
+    /// `ranking_by_[RANKING_NAME].[INTERVAL_NUMBER]` and the specified
+    /// entry with an optional custom tag.
+    ///
+    /// INTERVAL_NUMBER is the `ranking` as provided as argument divided
+    /// by the `index_interval` of the [`RankingIndex`].
+    ///
+    /// If the path doesn't exist yet, it will be created on the fly.
     pub fn create_entry_ranking(
         &self,
         entry_hash: EntryHash,
@@ -36,6 +44,7 @@ impl RankingIndex {
         Ok(())
     }
 
+    /// Deletes the link associated to an entry ranking for the specified entry.
     pub fn delete_entry_ranking(
         self,
         entry_hash: EntryHash,
@@ -60,12 +69,27 @@ impl RankingIndex {
         Ok(())
     }
 
+    /// Gets highest/lowest `entry_count` ranked entries. The `direction` specifies
+    /// whether to get the highest or the lowest ranked entries.
+    ///
+    /// The SQL analogue of `get_entry_ranking_chunk(GetRankingDirection::Ascending, 10)`
+    /// would be:
+    /// `SELECT * FROM all_ranked_entries ORDER BY ranking ASC LIMIT 10`
+    ///
+    /// Optionally, a `cursor` can be specified in order to get the highest/lowest
+    /// `entry_count` ranked entries starting from the ranking specified in the cursor.
+    ///
+    /// The SQL analogue of
+    /// `get_entry_ranking_chunk(GetRankingDirection::Descending, 5, Some( GetRankingCursor { from_ranking: 350 }))`
+    /// would be
+    /// `WITH ranked_entries_subset AS (SELECT * FROM all_ranked_entries WHERE ranking < 350) SELECT * FROM ranked_entries_subset ORDER BY ranking DESC LIMIT 5`
     pub fn get_entry_ranking_chunk(
         &self,
         direction: GetRankingDirection,
         entry_count: usize,
         cursor: Option<GetRankingCursor>,
     ) -> ExternResult<EntryRanking> {
+
         let intervals: BTreeMap<i64, Path> = self.get_interval_paths()?;
 
         let mut entry_ranking: EntryRanking = BTreeMap::new();
@@ -106,6 +130,7 @@ impl RankingIndex {
     }
 
     fn get_interval_paths(&self) -> ExternResult<BTreeMap<i64, Path>> {
+
         let root_path = self.root_path();
 
         let children_paths = root_path.children_paths()?;
@@ -124,6 +149,7 @@ impl RankingIndex {
     }
 
     fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRanking> {
+
         let links = get_links(interval_path.path_entry_hash()?, None)?;
 
         let entry_ranking = links

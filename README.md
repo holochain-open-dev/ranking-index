@@ -28,7 +28,7 @@ Here, the `name` identifies the index, so only entries ranked by this index will
 entry_defs![Path::entry_def()];
 ```
 
-3. Add an entry to the index with `rank_entry`:
+3. Add an entry to the index with `create_entry_ranking`:
 
 ```rust
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,8 +38,8 @@ pub struct RankEntryInput {
 }
 
 #[hdk_extern]
-pub fn rank_entry(input: RankEntryInput) -> ExternResult<()> {
-    MY_RANKING_INDEX.rank_entry(input.entry_hash, input.ranking, None)
+pub fn create_entry_ranking(input: RankEntryInput) -> ExternResult<()> {
+    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None)
 }
 ```
 
@@ -70,7 +70,7 @@ Enter the nix-shell by running `nix-shell` in the root folder of the repository.
 
 ## Testing
 
-Run the tests with: 
+Run the tests with:
 
 ```bash
 sh run-tests.sh
