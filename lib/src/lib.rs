@@ -38,6 +38,7 @@ impl RankingIndex {
         create_link(
             path.path_entry_hash()?,
             entry_hash,
+            LinkType(0),
             ranking_to_tag(ranking, tag)?,
         )?;
 
