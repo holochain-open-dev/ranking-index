@@ -1,13 +1,12 @@
 [package]
 edition = "2018"
-name = "hc_lib_ranking_index"
+name = "example_ranking_index_integrity"
 version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "hc_lib_ranking_index"
+name = "example_ranking_index_integrity"
 
 [dependencies]
 serde = "1"
 hdi = "=0.1.10"
-hdk = {version = "0.0.163", features = ["encoding"]}

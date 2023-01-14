@@ -39,7 +39,7 @@ pub struct RankEntryInput {
 
 #[hdk_extern]
 pub fn create_entry_ranking(input: RankEntryInput) -> ExternResult<()> {
-    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None)
+    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None, LinkTypes::Ranking)
 }
 ```
 

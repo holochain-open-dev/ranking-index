@@ -1,7 +1,8 @@
 [workspace]
 members = [
-  "example/zomes/example",
-  "lib",
+  "example/zomes/example/coordinator",
+  "example/zomes/example/integrity",
+  "lib"
 ]
 resolver = "2"
 

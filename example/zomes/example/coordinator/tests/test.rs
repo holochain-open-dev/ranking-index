@@ -11,7 +11,7 @@ async fn basic_rank() {
     // Use prebuilt DNA file
     let dna_path = std::env::current_dir()
         .unwrap()
-        .join("../../workdir/example-ranking-index.dna");
+        .join("../../../workdir/example-ranking-index.dna");
     let dna = SweetDnaFile::from_bundle(&dna_path).await.unwrap();
 
     // Set up conductors
@@ -45,12 +45,13 @@ async fn basic_rank() {
             entry_hash,
         };
 
+
         let _r: () = conductors[0]
             .call(&alice_zome, "create_entry_ranking", input)
             .await;
     }
 
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
     let get_entry_ranking_chunk_input = GetRankingsInput {
         direction: GetRankingDirection::Ascendent,
@@ -138,7 +139,7 @@ async fn basic_rank() {
         )
         .await;
 
-    consistency_10s(&[&alice, &bobbo]).await;
+    consistency_10s([&alice, &bobbo]).await;
 
     let ranking_output: EntryRanking = conductors[0]
         .call(

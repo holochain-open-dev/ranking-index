@@ -1,8 +1,17 @@
 ---
 manifest_version: "1"
 name: example-ranking-index
-uuid: 00000000-0000-0000-0000-000000000000
-properties: ~
-zomes: 
-  - name: example_ranking_index
-    bundled: ../../target/wasm32-unknown-unknown/release/example_ranking_index.wasm
+integrity:
+  uuid: 00000000-0000-0000-0000-000000000000
+  origin_time: 2022-10-05T00:00:00.000000Z
+  properties: ~
+  zomes: 
+    - name: example_ranking_index_integrity
+      bundled: ../../target/wasm32-unknown-unknown/release/example_ranking_index_integrity.wasm
+      dependencies:
+coordinator:
+  zomes:
+    - name: example_ranking_index
+      bundled: ../../target/wasm32-unknown-unknown/release/example_ranking_index.wasm
+      dependencies:
+        - name: example_ranking_index_integrity
