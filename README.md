@@ -22,10 +22,13 @@ const MY_RANKING_INDEX: RankingIndex = RankingIndex {
 
 Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
 
-2. Add `Path` to the `entry_defs` of the zome if they are not already there:
+2. Add a LinkType to your zome that will be used as all segments of the index Path
 
 ```rust
-entry_defs![Path::entry_def()];
+#[hdk_link_types]
+pub enum LinkTypes {
+    Ranking
+}
 ```
 
 3. Add an entry to the index with `create_entry_ranking`:

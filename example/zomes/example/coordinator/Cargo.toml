@@ -10,7 +10,7 @@ name = "example_ranking_index"
 [dependencies]
 hc_lib_ranking_index = {path = "../../../../lib"}
 example_ranking_index_integrity = {path = "../integrity"}
-hdk = {version = "0.0.163", features = ["encoding"]}
+hdk = {version = "0.1.0-beta-rc.1", features = ["encoding"]}
 serde = "1"
 
 [dev-dependencies]

@@ -9,5 +9,4 @@ name = "hc_lib_ranking_index"
 
 [dependencies]
 serde = "1"
-hdi = "=0.1.10"
-hdk = {version = "0.0.163", features = ["encoding"]}
+hdk = {version = "0.1.0-beta-rc.1", features = ["encoding"]}
