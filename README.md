@@ -22,7 +22,7 @@ const MY_RANKING_INDEX: RankingIndex = RankingIndex {
 
 Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
 
-2. Add a LinkType to your zome that will be used as all segments of the index Path
+2. Add a LinkType to your zome to use for the ranking index Path
 
 ```rust
 #[hdk_link_types]
@@ -38,11 +38,12 @@ pub enum LinkTypes {
 pub struct RankEntryInput {
     pub ranking: i64,
     pub entry_hash: EntryHash,
+    pub path_link_type: ScopedLinkType
 }
 
 #[hdk_extern]
 pub fn create_entry_ranking(input: RankEntryInput) -> ExternResult<()> {
-    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None, LinkTypes::Ranking)
+    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None, input.path_link_type)
 }
 ```
 
@@ -54,12 +55,13 @@ pub struct GetRankingInput {
     pub direction: GetRankingDirection,
     pub entry_count: usize,
     pub cursor: Option<GetRankingCursor>,
+    pub path_link_type: ScopedLinkType
 }
 
 
 #[hdk_extern]
 pub fn get_entry_ranking_chunk(input: GetRankingInput) -> ExternResult<EntryRanking> {
-    MY_RANKING_INDEX.get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor)
+    MY_RANKING_INDEX.get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor, input.path_link_type)
 }
 ```
 
