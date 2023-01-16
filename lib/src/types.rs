@@ -25,7 +25,7 @@ pub struct EntryHashWithTag {
 }
 
 pub struct RankingIndex {
-    pub name: &'static str,
+    pub link_type: ScopedLinkType,
     pub index_interval: u64,
 }
 

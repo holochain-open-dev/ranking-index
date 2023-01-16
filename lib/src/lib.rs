@@ -5,9 +5,9 @@ mod types;
 pub use types::*;
 
 impl RankingIndex {
-    pub fn new_with_default_mod(name: &'static str) -> Self {
+    pub fn new_with_default_mod(link_type: ScopedLinkType) -> Self {
         RankingIndex {
-            name,
+            link_type,
             index_interval: 100,
         }
     }
@@ -25,16 +25,15 @@ impl RankingIndex {
         entry_hash: EntryHash,
         ranking: i64,
         tag: Option<SerializedBytes>,
-        link_type: ScopedLinkType,
     ) -> ExternResult<()> {
         let path:  Path = self.get_ranking_path(ranking);
-        let typed_path = path.typed(link_type)?;
+        let typed_path = path.typed(self.link_type)?;
         typed_path.ensure()?;
 
         create_link(
             typed_path.path_entry_hash()?,
             entry_hash,
-            link_type,
+            self.link_type,
             ranking_to_tag(ranking, tag)?,
         )?;
 
@@ -89,10 +88,9 @@ impl RankingIndex {
         direction: GetRankingDirection,
         entry_count: usize,
         cursor: Option<GetRankingCursor>,
-        path_link_type: ScopedLinkType,
     ) -> ExternResult<EntryRanking> {
 
-        let intervals = self.get_interval_paths(path_link_type)?;
+        let intervals = self.get_interval_paths()?;
 
         let mut entry_ranking: EntryRanking = BTreeMap::new();
         let mut interval_index =
@@ -132,9 +130,9 @@ impl RankingIndex {
     }
 
 
-    fn get_interval_paths(&self, path_link_type: ScopedLinkType) -> ExternResult<BTreeMap<i64, Path>> {
+    fn get_interval_paths(&self) -> ExternResult<BTreeMap<i64, Path>> {
 
-        let root_path = self.root_path().into_typed(path_link_type);
+        let root_path = self.root_path().into_typed(self.link_type);
 
         let children_paths = root_path.children_paths()?;
 
@@ -197,13 +195,11 @@ impl RankingIndex {
     }
 
     fn root_path(&self) -> Path {
-        let path = Path::from(self.root_path_str());
-
-        path
+        Path::from(self.root_path_str())
     }
 
     fn root_path_str(&self) -> String {
-        format!("ranking_by_{}", self.name)
+        format!("ranking_index")
     }
 }
 
