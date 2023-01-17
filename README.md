@@ -11,18 +11,7 @@ hc_lib_ranking_index = {git = "https://github.com/holochain-open-dev/ranking-ind
 
 ## Usage
 
-1. Define your index:
-
-```rust
-const MY_RANKING_INDEX: RankingIndex = RankingIndex {
-    name: "my_thing",
-    index_interval: 3,
-};
-```
-
-Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
-
-2. Add a LinkType to your zome to use for the ranking index Path
+1. Add a LinkType to your zome to use for the ranking index Path
 
 ```rust
 #[hdk_link_types]
@@ -31,6 +20,19 @@ pub enum LinkTypes {
 }
 ```
 
+
+2. Define your index:
+
+```rust
+const MY_RANKING_INDEX: RankingIndex = RankingIndex {
+    link_type: ScopedLinkType::try_from(LinkTypes::Ranking).unwrap(),
+    index_interval: 3,
+};
+```
+
+Here, the `link_type` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
+
+
 3. Add an entry to the index with `create_entry_ranking`:
 
 ```rust
@@ -38,12 +40,11 @@ pub enum LinkTypes {
 pub struct RankEntryInput {
     pub ranking: i64,
     pub entry_hash: EntryHash,
-    pub path_link_type: ScopedLinkType
 }
 
 #[hdk_extern]
 pub fn create_entry_ranking(input: RankEntryInput) -> ExternResult<()> {
-    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None, input.path_link_type)
+    MY_RANKING_INDEX.create_entry_ranking(input.entry_hash, input.ranking, None)
 }
 ```
 
@@ -55,13 +56,12 @@ pub struct GetRankingInput {
     pub direction: GetRankingDirection,
     pub entry_count: usize,
     pub cursor: Option<GetRankingCursor>,
-    pub path_link_type: ScopedLinkType
 }
 
 
 #[hdk_extern]
 pub fn get_entry_ranking_chunk(input: GetRankingInput) -> ExternResult<EntryRanking> {
-    MY_RANKING_INDEX.get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor, input.path_link_type)
+    MY_RANKING_INDEX.get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor)
 }
 ```
 
