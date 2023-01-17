@@ -11,22 +11,27 @@ hc_lib_ranking_index = {git = "https://github.com/holochain-open-dev/ranking-ind
 
 ## Usage
 
-1. Define your index:
+1. Add a LinkType to your zome to use for the ranking index Path
+
+```rust
+#[hdk_link_types]
+pub enum LinkTypes {
+    Ranking
+}
+```
+
+
+2. Define your index:
 
 ```rust
 const MY_RANKING_INDEX: RankingIndex = RankingIndex {
-    name: "my_thing",
+    link_type: ScopedLinkType::try_from(LinkTypes::Ranking).unwrap(),
     index_interval: 3,
 };
 ```
 
-Here, the `name` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
+Here, the `link_type` identifies the index, so only entries ranked by this index will be returned with `get_entry_ranking_chunk`.
 
-2. Add `Path` to the `entry_defs` of the zome if they are not already there:
-
-```rust
-entry_defs![Path::entry_def()];
-```
 
 3. Add an entry to the index with `create_entry_ranking`:
 

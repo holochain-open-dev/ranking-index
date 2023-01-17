@@ -8,11 +8,12 @@ crate-type = ["cdylib", "rlib"]
 name = "example_ranking_index"
 
 [dependencies]
-hc_lib_ranking_index = {path = "../../../lib"}
-hdk = {version = "0.0.126", features = ["encoding"]}
+hc_lib_ranking_index = {path = "../../../../lib"}
+example_ranking_index_integrity = {path = "../integrity"}
+hdk = {version = "0.1.0-beta-rc.1", features = ["encoding"]}
 serde = "1"
 
 [dev-dependencies]
 futures = {version = "0.3.1", default-features = false}
-holochain = {version = "0.0.131", default-features = false, features = ["test_utils"]}
+holochain = {version = "0.1.0-beta-rc.1", default-features = false, features = ["test_utils"]}
 tokio = {version = "1.3", features = ["full"]}

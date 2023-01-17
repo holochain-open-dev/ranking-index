@@ -4,15 +4,10 @@ use std::collections::BTreeMap;
 mod types;
 pub use types::*;
 
-pub struct RankingIndex {
-    pub name: &'static str,
-    pub index_interval: u64,
-}
-
 impl RankingIndex {
-    pub fn new_with_default_mod(name: &'static str) -> Self {
+    pub fn new_with_default_mod(link_type: ScopedLinkType) -> Self {
         RankingIndex {
-            name,
+            link_type,
             index_interval: 100,
         }
     }
@@ -31,14 +26,14 @@ impl RankingIndex {
         ranking: i64,
         tag: Option<SerializedBytes>,
     ) -> ExternResult<()> {
-        let path = self.get_ranking_path(ranking);
-
-        path.ensure()?;
+        let path:  Path = self.get_ranking_path(ranking);
+        let typed_path = path.typed(self.link_type)?;
+        typed_path.ensure()?;
 
         create_link(
-            path.path_entry_hash()?,
+            typed_path.path_entry_hash()?,
             entry_hash,
-            LinkType(0),
+            self.link_type,
             ranking_to_tag(ranking, tag)?,
         )?;
 
@@ -47,18 +42,22 @@ impl RankingIndex {
 
     /// Deletes the link associated to an entry ranking for the specified entry.
     pub fn delete_entry_ranking(
-        self,
+        &self,
         entry_hash: EntryHash,
         entry_ranking: i64,
     ) -> ExternResult<()> {
         // Get previous ranking
-        let ranking_path = self.get_ranking_path(entry_ranking);
-        let links = get_links(ranking_path.path_entry_hash()?, None)?;
+        let ranking_path = &self.get_ranking_path(entry_ranking);
+        let links = get_links(
+            ranking_path.path_entry_hash()?,
+            ..,
+            None
+        )?;
 
-        let links_to_delete: Vec<HeaderHash> = links
+        let links_to_delete: Vec<ActionHash> = links
             .clone()
             .into_iter()
-            .filter(|link| link.target.eq(&entry_hash))
+            .filter(|link| link.target.eq(&AnyLinkableHash::from(entry_hash.clone())))
             .map(|link| link.create_link_hash)
             .collect();
 
@@ -91,7 +90,7 @@ impl RankingIndex {
         cursor: Option<GetRankingCursor>,
     ) -> ExternResult<EntryRanking> {
 
-        let intervals: BTreeMap<i64, Path> = self.get_interval_paths()?;
+        let intervals = self.get_interval_paths()?;
 
         let mut entry_ranking: EntryRanking = BTreeMap::new();
         let mut interval_index =
@@ -104,15 +103,15 @@ impl RankingIndex {
             && interval_index < intervals.len() as isize
         {
             let path_to_fetch = paths[interval_index as usize];
-            let new_entry_ranking = self.get_ranking_from_interval_path(path_to_fetch)?;
+            let new_entry_ranking = &self.get_ranking_from_interval_path(path_to_fetch)?;
 
             for (ranking, entry_hashes) in new_entry_ranking {
-                if is_inside_query_range(ranking, direction.clone(), cursor.clone()) {
+                if is_inside_query_range(ranking.clone(), direction.clone(), cursor.clone()) {
                     for entry_hash in entry_hashes {
                         entry_ranking
-                            .entry(ranking)
+                            .entry(ranking.clone())
                             .or_insert_with(Vec::new)
-                            .push(entry_hash);
+                            .push(entry_hash.clone());
                     }
                 }
             }
@@ -130,9 +129,10 @@ impl RankingIndex {
         Ok(entry_ranking)
     }
 
+
     fn get_interval_paths(&self) -> ExternResult<BTreeMap<i64, Path>> {
 
-        let root_path = self.root_path();
+        let root_path = self.root_path().into_typed(self.link_type);
 
         let children_paths = root_path.children_paths()?;
 
@@ -141,7 +141,7 @@ impl RankingIndex {
         for path in children_paths {
             if let Some(component) = path.leaf() {
                 if let Ok(ranking) = component_to_ranking(component) {
-                    interval_paths.insert(ranking, path);
+                    interval_paths.insert(ranking, path.path);
                 }
             }
         }
@@ -151,7 +151,11 @@ impl RankingIndex {
 
     fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRanking> {
 
-        let links = get_links(interval_path.path_entry_hash()?, None)?;
+        let links = get_links(
+            interval_path.path_entry_hash()?, 
+            ..,
+            None
+        )?;
 
         let entry_ranking = links
             .into_iter()
@@ -159,7 +163,7 @@ impl RankingIndex {
                 let ranking = tag_to_ranking(link.tag)?;
                 Ok((ranking.0, link.target, ranking.1))
             })
-            .collect::<ExternResult<Vec<(i64, EntryHash, Option<SerializedBytes>)>>>()?;
+            .collect::<ExternResult<Vec<(i64, AnyLinkableHash, Option<SerializedBytes>)>>>()?;
 
         let mut ranking_map: EntryRanking = BTreeMap::new();
 
@@ -168,7 +172,7 @@ impl RankingIndex {
                 .entry(ranking)
                 .or_insert_with(Vec::new)
                 .push(EntryHashWithTag {
-                    entry_hash,
+                    entry_hash: EntryHash::from(entry_hash),
                     tag: custom_tag,
                 });
         }
@@ -181,11 +185,13 @@ impl RankingIndex {
     }
 
     fn get_ranking_path(&self, ranking: i64) -> Path {
-        Path::from(format!(
+        let path = Path::from(format!(
             "{}.{}",
             self.root_path_str(),
             self.ranking_interval(ranking)
-        ))
+        ));
+
+        path
     }
 
     fn root_path(&self) -> Path {
@@ -193,21 +199,15 @@ impl RankingIndex {
     }
 
     fn root_path_str(&self) -> String {
-        format!("ranking_by_{}", self.name)
+        format!("ranking_index")
     }
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-struct RankingTag {
-    ranking: i64,
-    custom_tag: Option<SerializedBytes>,
 }
 
 fn ranking_to_tag(ranking: i64, custom_tag: Option<SerializedBytes>) -> ExternResult<LinkTag> {
     let bytes = SerializedBytes::try_from(RankingTag {
         ranking,
         custom_tag,
-    })?;
+    }).map_err(|e| wasm_error!(WasmErrorInner::Guest(e.into())))?;
 
     Ok(LinkTag(bytes.bytes().clone()))
 }
@@ -216,15 +216,15 @@ fn tag_to_ranking(tag: LinkTag) -> ExternResult<(i64, Option<SerializedBytes>)> 
     let bytes = tag.into_inner();
     let sb = SerializedBytes::from(UnsafeBytes::from(bytes));
 
-    let ranking: RankingTag = sb.try_into()?;
+    let ranking = types::RankingTag::try_from(sb).map_err(|e| wasm_error!(WasmErrorInner::Guest(e.into())))?;
     Ok((ranking.ranking, ranking.custom_tag))
 }
 
 fn component_to_ranking(c: &Component) -> ExternResult<i64> {
-    let s: String = c.try_into()?;
+    let s = String::try_from(c).map_err(|e| wasm_error!(WasmErrorInner::Guest(e.into())))?;
     let ranking = s
         .parse::<i64>()
-        .or(Err(WasmError::Guest("Bad component".into())))?;
+        .map_err(|_| wasm_error!(WasmErrorInner::Guest("Bad component".into())))?;
 
     Ok(ranking)
 }
