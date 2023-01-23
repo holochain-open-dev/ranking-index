@@ -19,8 +19,8 @@ pub struct RankingTag {
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-pub struct EntryHashWithTag {
-    pub entry_hash: EntryHash,
+pub struct HashWithTag {
+    pub hash: AnyLinkableHash,
     pub tag: Option<SerializedBytes>,
 }
 
@@ -29,4 +29,4 @@ pub struct RankingIndex {
     pub index_interval: u64,
 }
 
-pub type EntryRanking = BTreeMap<i64, Vec<EntryHashWithTag>>;
+pub type Ranking = BTreeMap<i64, Vec<HashWithTag>>;
