@@ -20,9 +20,9 @@ impl RankingIndex {
     /// by the `index_interval` of the [`RankingIndex`].
     ///
     /// If the path doesn't exist yet, it will be created on the fly.
-    pub fn create_entry_ranking(
+    pub fn create_ranking(
         &self,
-        entry_hash: EntryHash,
+        hash: AnyLinkableHash,
         ranking: i64,
         tag: Option<SerializedBytes>,
     ) -> ExternResult<()> {
@@ -32,7 +32,7 @@ impl RankingIndex {
 
         create_link(
             typed_path.path_entry_hash()?,
-            entry_hash,
+            hash,
             self.link_type,
             ranking_to_tag(ranking, tag)?,
         )?;
@@ -41,13 +41,13 @@ impl RankingIndex {
     }
 
     /// Deletes the link associated to an entry ranking for the specified entry.
-    pub fn delete_entry_ranking(
+    pub fn delete_ranking(
         &self,
-        entry_hash: EntryHash,
-        entry_ranking: i64,
+        hash: AnyLinkableHash,
+        ranking: i64,
     ) -> ExternResult<()> {
         // Get previous ranking
-        let ranking_path = &self.get_ranking_path(entry_ranking);
+        let ranking_path = &self.get_ranking_path(ranking);
         let links = get_links(
             ranking_path.path_entry_hash()?,
             ..,
@@ -57,7 +57,7 @@ impl RankingIndex {
         let links_to_delete: Vec<ActionHash> = links
             .clone()
             .into_iter()
-            .filter(|link| link.target.eq(&AnyLinkableHash::from(entry_hash.clone())))
+            .filter(|link| link.target.eq(&AnyLinkableHash::from(hash.clone())))
             .map(|link| link.create_link_hash)
             .collect();
 
@@ -69,49 +69,49 @@ impl RankingIndex {
         Ok(())
     }
 
-    /// Gets highest/lowest `entry_count` ranked entries. The `direction` specifies
+    /// Gets highest/lowest `count` ranked entries. The `direction` specifies
     /// whether to get the highest or the lowest ranked entries.
     ///
-    /// The SQL analogue of `get_entry_ranking_chunk(GetRankingDirection::Ascending, 10)`
+    /// The SQL analogue of `get_ranking_chunk(GetRankingDirection::Ascending, 10)`
     /// would be:
     /// `SELECT * FROM all_ranked_entries ORDER BY ranking ASC LIMIT 10`
     ///
     /// Optionally, a `cursor` can be specified in order to get the highest/lowest
-    /// `entry_count` ranked entries starting from the ranking specified in the cursor.
+    /// `count` ranked entries starting from the ranking specified in the cursor.
     ///
     /// The SQL analogue of
-    /// `get_entry_ranking_chunk(GetRankingDirection::Descending, 5, Some( GetRankingCursor { from_ranking: 350 }))`
+    /// `get_ranking_chunk(GetRankingDirection::Descending, 5, Some( GetRankingCursor { from_ranking: 350 }))`
     /// would be
     /// `WITH ranked_entries_subset AS (SELECT * FROM all_ranked_entries WHERE ranking < 350) SELECT * FROM ranked_entries_subset ORDER BY ranking DESC LIMIT 5`
-    pub fn get_entry_ranking_chunk(
+    pub fn get_ranking_chunk(
         &self,
         direction: GetRankingDirection,
-        entry_count: usize,
+        count: usize,
         cursor: Option<GetRankingCursor>,
-    ) -> ExternResult<EntryRanking> {
+    ) -> ExternResult<Ranking> {
 
         let intervals = self.get_interval_paths()?;
 
-        let mut entry_ranking: EntryRanking = BTreeMap::new();
+        let mut ranking_map: Ranking = BTreeMap::new();
         let mut interval_index =
             initial_interval_index(&intervals, direction.clone(), cursor.clone()) as isize;
 
         let paths: Vec<&Path> = intervals.values().into_iter().collect();
 
-        while ranking_len(&entry_ranking) < entry_count
+        while ranking_len(&ranking_map) < count
             && interval_index >= 0
             && interval_index < intervals.len() as isize
         {
             let path_to_fetch = paths[interval_index as usize];
-            let new_entry_ranking = &self.get_ranking_from_interval_path(path_to_fetch)?;
+            let new_ranking = &self.get_ranking_from_interval_path(path_to_fetch)?;
 
-            for (ranking, entry_hashes) in new_entry_ranking {
+            for (ranking, hashes) in new_ranking {
                 if is_inside_query_range(ranking.clone(), direction.clone(), cursor.clone()) {
-                    for entry_hash in entry_hashes {
-                        entry_ranking
+                    for hash in hashes {
+                        ranking_map
                             .entry(ranking.clone())
                             .or_insert_with(Vec::new)
-                            .push(entry_hash.clone());
+                            .push(hash.clone());
                     }
                 }
             }
@@ -126,7 +126,7 @@ impl RankingIndex {
             }
         }
 
-        Ok(entry_ranking)
+        Ok(ranking_map)
     }
 
 
@@ -149,7 +149,7 @@ impl RankingIndex {
         Ok(interval_paths)
     }
 
-    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<EntryRanking> {
+    fn get_ranking_from_interval_path(&self, interval_path: &Path) -> ExternResult<Ranking> {
 
         let links = get_links(
             interval_path.path_entry_hash()?, 
@@ -157,7 +157,7 @@ impl RankingIndex {
             None
         )?;
 
-        let entry_ranking = links
+        let ranking = links
             .into_iter()
             .map(|link| {
                 let ranking = tag_to_ranking(link.tag)?;
@@ -165,14 +165,14 @@ impl RankingIndex {
             })
             .collect::<ExternResult<Vec<(i64, AnyLinkableHash, Option<SerializedBytes>)>>>()?;
 
-        let mut ranking_map: EntryRanking = BTreeMap::new();
+        let mut ranking_map: Ranking = BTreeMap::new();
 
-        for (ranking, entry_hash, custom_tag) in entry_ranking {
+        for (ranking, hash, custom_tag) in ranking {
             ranking_map
                 .entry(ranking)
                 .or_insert_with(Vec::new)
-                .push(EntryHashWithTag {
-                    entry_hash: EntryHash::from(entry_hash),
+                .push(HashWithTag {
+                    hash: AnyLinkableHash::from(hash),
                     tag: custom_tag,
                 });
         }
@@ -229,8 +229,8 @@ fn component_to_ranking(c: &Component) -> ExternResult<i64> {
     Ok(ranking)
 }
 
-fn ranking_len(entry_ranking: &EntryRanking) -> usize {
-    entry_ranking.values().fold(0, |acc, next| acc + next.len())
+fn ranking_len(ranking: &Ranking) -> usize {
+    ranking.values().fold(0, |acc, next| acc + next.len())
 }
 
 fn initial_interval_index(

@@ -14,38 +14,52 @@ pub fn my_ranking_index() -> RankingIndex {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateEntryRankingInput {
     pub ranking: i64,
-    pub entry_hash: EntryHash,
+    pub hash: EntryHash,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CreateActionRankingInput {
+    pub ranking: i64,
+    pub hash: ActionHash,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GetRankingsInput {
     pub direction: GetRankingDirection,
-    pub entry_count: usize,
+    pub count: usize,
     pub cursor: Option<GetRankingCursor>,
 }
 
 #[hdk_extern]
-pub fn create_entry_ranking(input: CreateEntryRankingInput) -> ExternResult<()> {
-    let custom_tag = SerializedBytes::try_from(input.entry_hash.clone())
+pub fn create_ranking(input: CreateEntryRankingInput) -> ExternResult<()> {
+    let custom_tag = SerializedBytes::try_from(input.hash.clone())
         .map_err(|e| wasm_error!(WasmErrorInner::Guest(e.into())))?;
 
-    my_ranking_index().create_entry_ranking(input.entry_hash, input.ranking, Some(custom_tag))
+    my_ranking_index().create_ranking(AnyLinkableHash::from(input.hash), input.ranking, Some(custom_tag))
+}
+
+#[hdk_extern]
+pub fn create_action_ranking(input: CreateActionRankingInput) -> ExternResult<()> {
+    let custom_tag = SerializedBytes::try_from(input.hash.clone())
+        .map_err(|e| wasm_error!(WasmErrorInner::Guest(e.into())))?;
+
+    my_ranking_index().create_ranking(AnyLinkableHash::from(input.hash), input.ranking, Some(custom_tag))
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeleteEntryRankingInput {
     pub current_ranking: i64,
-    pub entry_hash: EntryHash,
+    pub hash: EntryHash,
 }
 
 #[hdk_extern]
-pub fn delete_entry_ranking(input: DeleteEntryRankingInput) -> ExternResult<()> {
-    my_ranking_index().delete_entry_ranking(input.entry_hash, input.current_ranking)
+pub fn delete_ranking(input: DeleteEntryRankingInput) -> ExternResult<()> {
+    my_ranking_index().delete_ranking(AnyLinkableHash::from(input.hash), input.current_ranking)
 }
 
 #[hdk_extern]
-pub fn get_entry_ranking_chunk(input: GetRankingsInput) -> ExternResult<EntryRanking> {
-    my_ranking_index().get_entry_ranking_chunk(input.direction, input.entry_count, input.cursor)
+pub fn get_ranking_chunk(input: GetRankingsInput) -> ExternResult<Ranking> {
+    my_ranking_index().get_ranking_chunk(input.direction, input.count, input.cursor)
 }
 
 #[hdk_extern]
@@ -54,4 +68,12 @@ pub fn create_demo_entry(content: String) -> ExternResult<EntryHash> {
     create_entry(example_ranking_index_integrity::EntryTypes::DemoEntry(entry.clone()))?;
 
     hash_entry(&entry)
+}
+
+#[hdk_extern]
+pub fn create_demo_entry_get_ah(content: String) -> ExternResult<ActionHash> {
+    let entry = DemoEntry(content);
+    let action_hash = create_entry(example_ranking_index_integrity::EntryTypes::DemoEntry(entry.clone()))?;
+
+    Ok(action_hash)
 }
